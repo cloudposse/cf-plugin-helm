@@ -1,63 +1,42 @@
-# Build a service with environment variables
+---
 version: '1.0'
 
 steps:
-  init-variables:
-    title: Init variables
-    image: alpine
-    commands:
-      - cf_export BUILD_HARNESS_VERSION=feature-helm-chart-ops
-
-  build-image:
+  build:
     type: build
-    description: Build catalogue db
-    image-name: cloudposse/cf-plugin-helm
-    dockerfile: Dockerfile
-
-  semver:
-    title: Export semversion
-    image: cloudposse/build-harness:feature-helm-chart-ops
-    working_directory: /build-harness
-    commands:
-      - make git:show
-      - make semver:show
-      - make semver:export >> ${{CF_VOLUME_PATH}}/env_vars_to_export
-    environment:
-      - GIT_BRANCH=${{CF_BRANCH}}
-
-  push-image-commit:
+    image_name: codefresh/plugin-helm
+    build_arguments:
+      - HELM_VERSION=${{HELM_VERSION}}
+  
+  push_branch:
     type: push
-    candidate: ${{build-image}}
-    tags:
-      - "${{SEMVERSION_COMMIT_SHORT}}"
-      - "${{SEMVERSION_COMMIT}}"
+    title: "Pushing plugin-helm:branch ..."
+    description: Push Codefresh Plugin-Helm image to DockerHub
+    candidate: ${{build}}
+    tag: ${{CF_BRANCH}}
+    image_name: codefresh/plugin-helm
 
-  push-image-branch:
+  push_versioned:
     type: push
-    candidate: ${{build-image}}
-    tags:
-      - "${{SEMVERSION_BRANCH}}"
-      - "${{SEMVERSION_BRANCH_COMMIT_SHORT}}"
-      - "${{SEMVERSION_BRANCH_COMMIT}}"
+    title: "Pushing plugin-helm:latest ..."
+    description: Push Codefresh Plugin-Helm image to the DockerHub
+    candidate: ${{build}}
+    tag: "${{HELM_VERSION}}"
+    image_name: codefresh/plugin-helm
     when:
-      condition:
-        all:
-          executeForBranch: "'${{SEMVERSION_BRANCH}}' != ''"
+      branch:
+        only:
+          - master
 
-  push-image-tag:
+  push_latest:
     type: push
-    candidate: ${{build-image}}
-    tag: "${{SEMVERSION_TAG}}"
+    title: "Pushing plugin-helm:latest ..."
+    description: Push Codefresh Plugin-Helm image to the DockerHub
+    candidate: ${{build}}
+    tag: "latest"
+    image_name: codefresh/plugin-helm
     when:
-      condition:
-        all:
-          executeForTag: "'${{SEMVERSION_TAG}}' != ''"
-
-  push-image-latest:
-    type: push
-    candidate: ${{build-image}}
-    tag: latest
-    when:
-      condition:
-        all:
-          executeForMasterBranch: "'${{CF_BRANCH}}' == 'master'"
+      branch:
+        only:
+          - master
+ 
