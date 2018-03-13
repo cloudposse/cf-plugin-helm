@@ -6,7 +6,7 @@ steps:
     title: Init variables
     image: alpine
     commands:
-      - cf_export BUILD_HARNESS_VERSION=feature-helm-chart-ops
+      - cf_export BUILD_HARNESS_VERSION=0.4.0
 
   build-image:
     type: build
@@ -19,9 +19,9 @@ steps:
     image: cloudposse/build-harness:feature-helm-chart-ops
     working_directory: /build-harness
     commands:
-      - make git:show
-      - make semver:show
-      - make semver:export >> ${{CF_VOLUME_PATH}}/env_vars_to_export
+      - make git/show
+      - make semver/show
+      - make semver/export >> ${{CF_VOLUME_PATH}}/env_vars_to_export
     environment:
       - GIT_BRANCH=${{CF_BRANCH}}
 
